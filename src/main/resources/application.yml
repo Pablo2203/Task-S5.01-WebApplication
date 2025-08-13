@@ -1,11 +1,27 @@
 spring:
+  application:
+    name: consultorios
+
   r2dbc:
     url: r2dbc:mysql://localhost:3306/consultorios
     username: root
     password: tu_password
+    pool:
+      enabled: true
+
   flyway:
     enabled: true
     url: jdbc:mysql://localhost:3306/consultorios
     user: root
     password: tu_password
     locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  main:
+    web-application-type: reactive
+
+logging:
+  level:
+    root: INFO
+    org.springframework.r2dbc: DEBUG
+    org.springframework.security: DEBUG
