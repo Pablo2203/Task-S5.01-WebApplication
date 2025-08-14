@@ -1,5 +1,6 @@
 package cat.itacademy.s05.t02.n01.model;
 
+import cat.itacademy.s05.t02.n01.enums.Mood;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -7,7 +8,8 @@ import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.mapping.Column;
 
 import java.time.LocalDateTime;
-
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("virtual_assistants")

@@ -4,16 +4,16 @@ spring:
 
   r2dbc:
     url: r2dbc:mysql://localhost:3306/consultorios
-    username: root
-    password: tu_password
+    username: virginia
+    password: Lisandro10
     pool:
       enabled: true
 
   flyway:
     enabled: true
     url: jdbc:mysql://localhost:3306/consultorios
-    user: root
-    password: tu_password
+    user: virginia
+    password: Lisandro10
     locations: classpath:db/migration
     baseline-on-migrate: true
 

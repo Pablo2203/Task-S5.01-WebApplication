@@ -1,5 +1,6 @@
 package cat.itacademy.s05.t02.n01.controllers;
 
+import cat.itacademy.s05.t02.n01.enums.Mood;
 import cat.itacademy.s05.t02.n01.model.VirtualAssistant;
 import cat.itacademy.s05.t02.n01.repositories.VirtualAssistantRepository;
 import org.springframework.web.bind.annotation.*;
@@ -34,11 +35,11 @@ public class VirtualAssistantController {
 
     // Cambiar el estado general (ejemplo: administradores)
     @PostMapping("/update-status")
-    public Mono<VirtualAssistant> updateStatus(@RequestBody String estado) {
+    public Mono<VirtualAssistant> updateStatus(@RequestBody Mood estado) {
         return assistantRepository.findAll()
                 .next()
                 .flatMap(assistant -> {
-                    assistant.setState(estado);
+                    assistant.setMood(estado);
                     return assistantRepository.save(assistant); // Guarda los cambios
                 });
     }
