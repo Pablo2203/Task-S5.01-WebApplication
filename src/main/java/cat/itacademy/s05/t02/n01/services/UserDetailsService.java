@@ -1,10 +1,9 @@
 package cat.itacademy.s05.t02.n01.services;
 
-import cat.itacademy.s05.t02.n01.model.User;
 import cat.itacademy.s05.t02.n01.repositories.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
