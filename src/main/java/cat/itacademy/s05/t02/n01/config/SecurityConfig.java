@@ -17,36 +17,24 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
-                JwtService jwtService,
-                UserDetailsService userDetailsService,
-                ReactiveAuthenticationManager authenticationManager) {
-
-            return http
-                    .securityContextRepository(new JwtSecurityContextRepository(jwtService, userDetailsService))
-                    .authenticationManager(authenticationManager)
-                    .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                    .authorizeExchange(auth -> auth
-                            // Endpoints públicos
-                            .pathMatchers("/auth/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-
-                            // Solo ADMIN
-                            .pathMatchers("/api/admin/**").hasRole("ADMIN")
-
-                            // Profesionales y Admin
-                            .pathMatchers("/api/professional/**").hasAnyRole("PROFESSIONAL", "ADMIN")
-
-                            // Pacientes y Admin
-                            .pathMatchers("/api/patient/**").hasAnyRole("PATIENT", "ADMIN")
-
-                            // Cualquier otro endpoint requiere estar autenticado
-                            .anyExchange().authenticated()
-                    )
-                    .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                    .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                    .build();
-        }
+    public SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity http,
+            JwtService jwtService,
+            UserDetailsService userDetailsService,
+            ReactiveAuthenticationManager authenticationManager) {
+        return http
+                .securityContextRepository(new JwtSecurityContextRepository(jwtService, userDetailsService))
+                .authenticationManager(authenticationManager)
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(auth -> auth
+                        .pathMatchers("/auth/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .pathMatchers("/api/admin/**").hasRole("ADMIN")
+                        .pathMatchers("/api/professional/**").hasAnyRole("PROFESSIONAL", "ADMIN")
+                        .pathMatchers("/api/patient/**").hasAnyRole("PATIENT", "ADMIN")
+                        .anyExchange().authenticated())
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .build();
     }
 
     @Bean
