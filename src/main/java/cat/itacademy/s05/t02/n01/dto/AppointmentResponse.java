@@ -2,8 +2,7 @@ package cat.itacademy.s05.t02.n01.dto;
 
 import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
 import cat.itacademy.s05.t02.n01.enums.Specialty;
-import org.w3c.dom.DocumentType;
-
+import cat.itacademy.s05.t02.n01.enums.DocumentType;
 import java.time.LocalDateTime;
 
 public record AppointmentResponse(

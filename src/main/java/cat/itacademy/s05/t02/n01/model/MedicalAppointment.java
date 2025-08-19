@@ -9,8 +9,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import jakarta.validation.constraints.*;
-import org.w3c.dom.DocumentType;
-
+import cat.itacademy.s05.t02.n01.enums.DocumentType;
 import java.time.LocalDateTime;
 
 @Getter

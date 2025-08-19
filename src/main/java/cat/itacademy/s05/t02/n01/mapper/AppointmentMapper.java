@@ -14,7 +14,7 @@ public interface AppointmentMapper {
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "patientId", source = "patientId") // viene de parámetro adicional
-    MedicalAppointment toEntity(CreateAppointmentRequest dto, @Context Long patientId);
+    MedicalAppointment toEntity(CreateAppointmentRequest dto, Long patientId);
 
     AppointmentResponse toResponse(MedicalAppointment entity);
 
