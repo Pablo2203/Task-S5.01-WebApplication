@@ -7,12 +7,10 @@ import cat.itacademy.s05.t02.n01.model.MedicalAppointment;
 import cat.itacademy.s05.t02.n01.repositories.MedicalAppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
-@Service
 @RequiredArgsConstructor
 public class MedicalAppointmentService {
 
