@@ -5,7 +5,6 @@ import cat.itacademy.s05.t02.n01.repositories.VirtualAssistantRepository;
 import cat.itacademy.s05.t02.n01.enums.Mood;
 import java.time.LocalDateTime;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
