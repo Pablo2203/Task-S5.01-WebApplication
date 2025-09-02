@@ -1,3 +1,4 @@
+/*
 package cat.itacademy.s05.t02.n01.services;
 import cat.itacademy.s05.t02.n01.dto.AppointmentResponse;
 import cat.itacademy.s05.t02.n01.dto.CreateAppointmentRequest;
@@ -64,6 +65,7 @@ public class MedicalAppointmentService {
 }
 
 
+*/
 /*Reglas que van en el service (no en el controller)
 endsAt = startsAt + duración por defecto (ej. 50 min) si no viene.
 
@@ -75,6 +77,8 @@ Si no viene patientId, los datos personales son requeridos.
 
 Si privacyConsent es false, rechazar 400.
 
-Setear createdAt/updatedAt y manejar @Version para updates.*/
+Setear createdAt/updatedAt y manejar @Version para updates.*//*
 
 
+
+*/

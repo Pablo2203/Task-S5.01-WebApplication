@@ -1,3 +1,4 @@
+/*
 package cat.itacademy.s05.t02.n01.repositories;
 
 import cat.itacademy.s05.t02.n01.model.MedicalAppointment;
@@ -15,3 +16,4 @@ public interface MedicalAppointmentRepository extends ReactiveCrudRepository<Med
     // para detectar solapamientos de citas de un mismo profesional comparando rangos de tiempo
 }
 
+*/

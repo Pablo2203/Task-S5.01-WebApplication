@@ -1,3 +1,4 @@
+/*
 package cat.itacademy.s05.t02.n01.mapper;
 
 import cat.itacademy.s05.t02.n01.dto.AppointmentResponse;
@@ -23,3 +24,4 @@ public interface AppointmentMapper {
     void updateEntityFromDto(UpdateAppointmentRequest dto, @MappingTarget MedicalAppointment entity);
 }
 
+*/

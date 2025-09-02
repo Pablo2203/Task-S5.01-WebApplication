@@ -26,8 +26,8 @@ public class DataLoader {
                         new VirtualAssistant(
                                 null,
                                 "Cecilia",
-                                Mood.NEUTRAL,
-                                50,
+                                Mood.GREETING,
+                                1,
                                 LocalDateTime.now(),
                                 null
                         )
