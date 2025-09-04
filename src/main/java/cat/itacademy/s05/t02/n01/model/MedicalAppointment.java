@@ -1,6 +1,8 @@
 
 package cat.itacademy.s05.t02.n01.model;
 
+import cat.itacademy.s05.t02.n01.enums.CoverageType;
+import io.micrometer.common.lang.Nullable;
 import jakarta.validation.constraints.NotNull;
 import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
 import cat.itacademy.s05.t02.n01.enums.Specialty;
@@ -10,7 +12,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import jakarta.validation.constraints.*;
-import cat.itacademy.s05.t02.n01.enums.DocumentType;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -30,16 +32,15 @@ public class MedicalAppointment {
     private Long patientId;
 
     @Column("professional_id")
-    @NotNull
+    @Nullable
     private Long professionalId;
 
     @Column("specialty")
     @NotNull
     private Specialty specialty; // enum del dominio (psicología, psiquiatría, etc.)
 
-    // Horario
     @Column("starts_at")
-    @NotNull
+    @Nullable
     private LocalDateTime startsAt;
 
     @Column("ends_at")
@@ -58,15 +59,6 @@ public class MedicalAppointment {
     @NotBlank
     private String lastName;
 
-    @Column("document_type")
-    @NotNull
-    private DocumentType documentType; // DNI / PASSPORT / CUIL opc.
-
-    @Column("document_number")
-    @NotBlank
-    @Pattern(regexp = "^[A-Za-z0-9.-]{5,20}$")
-    private String documentNumber;
-
     @Column("email")
     @Email
     private String email;
@@ -75,9 +67,8 @@ public class MedicalAppointment {
     @Pattern(regexp = "^[0-9+()\\s-]{6,20}$")
     private String phone;
 
-    // Obra social en Argentina
-    @Column("health_insurance")
-    private String healthInsurance; // “OSDE”, “Swiss Medical”, etc.
+    @Column("coverageType")
+    private CoverageType coverageType; // “OSDE”, “Swiss Medical”, etc.
 
     @Column("health_plan")
     private String healthPlan; // plan/planilla/opcional
@@ -91,10 +82,6 @@ public class MedicalAppointment {
 
     @Column("message")
     private String message;
-
-    // Consentimiento de privacidad (checkbox)
-    @Column("privacy_consent")
-    private boolean privacyConsent;
 
     // Auditoría mínima
     @Column("created_at")

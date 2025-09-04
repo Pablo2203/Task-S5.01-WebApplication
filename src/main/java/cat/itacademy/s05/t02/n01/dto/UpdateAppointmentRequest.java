@@ -1,4 +1,3 @@
-/*
 package cat.itacademy.s05.t02.n01.dto;
 
 import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
@@ -18,4 +17,4 @@ public record UpdateAppointmentRequest(
 
         String notes
 ) {}
-*/
+

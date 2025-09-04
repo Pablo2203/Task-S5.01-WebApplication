@@ -1,8 +1,7 @@
-/*
 package cat.itacademy.s05.t02.n01.mapper;
 
 import cat.itacademy.s05.t02.n01.dto.AppointmentResponse;
-import cat.itacademy.s05.t02.n01.dto.CreateAppointmentRequest;
+import cat.itacademy.s05.t02.n01.dto.CreateAppointmentRequestPublic;
 import cat.itacademy.s05.t02.n01.dto.UpdateAppointmentRequest;
 import cat.itacademy.s05.t02.n01.model.MedicalAppointment;
 import org.mapstruct.*;
@@ -10,12 +9,15 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface AppointmentMapper {
 
-    @Mapping(target = "id", ignore = true) // El ID lo genera la BD
-    @Mapping(target = "status", constant = "SCHEDULED") // Estado inicial por defecto
+    // Solicitud pública → entidad REQUESTED
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "patientId", ignore = true) // aún no asociado a paciente
+    @Mapping(target = "professionalId", ignore = true)
+    @Mapping(target = "endsAt", ignore = true)
+    @Mapping(target = "status", constant = "REQUESTED")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "patientId", source = "patientId") // viene de parámetro adicional
-    MedicalAppointment toEntity(CreateAppointmentRequest dto, Long patientId);
+    MedicalAppointment toEntityFromPublicRequest(CreateAppointmentRequestPublic dto);
 
     AppointmentResponse toResponse(MedicalAppointment entity);
 
@@ -23,5 +25,3 @@ public interface AppointmentMapper {
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
     void updateEntityFromDto(UpdateAppointmentRequest dto, @MappingTarget MedicalAppointment entity);
 }
-
-*/
