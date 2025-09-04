@@ -1,4 +1,4 @@
-/*
+
 package cat.itacademy.s05.t02.n01.model;
 
 import jakarta.validation.constraints.NotNull;
@@ -105,4 +105,4 @@ public class MedicalAppointment {
 
     @Version
     private Long version;
-}*/
+}
