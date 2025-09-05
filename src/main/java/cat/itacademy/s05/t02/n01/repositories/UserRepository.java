@@ -10,4 +10,6 @@ import reactor.core.publisher.Flux;
 public interface UserRepository  extends ReactiveCrudRepository<User, Long> {
     Mono<User> findByUsername(String username);
     Flux<User> findByRole(String role);
+    Mono<User> findByEmail(String email);
+    Flux<User> findByRoleAndEnabled(String role, boolean enabled);
 }
