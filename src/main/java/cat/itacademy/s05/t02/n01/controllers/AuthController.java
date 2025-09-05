@@ -4,6 +4,7 @@ import cat.itacademy.s05.t02.n01.dto.LoginRequest;
 import cat.itacademy.s05.t02.n01.dto.LoginResponse;
 import cat.itacademy.s05.t02.n01.repositories.UserRepository;
 import cat.itacademy.s05.t02.n01.services.JwtService;
+import cat.itacademy.s05.t02.n01.dto.RegisterRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -40,5 +41,22 @@ public class AuthController {
                     return Mono.just(new LoginResponse(token, roles, expires));
                 });
     }
-}
 
+    @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<Void> register(@Valid @RequestBody RegisterRequest req) {
+        return users.findByUsername(req.username())
+                .flatMap(u -> Mono.error(new RuntimeException("Usuario ya existe")))
+                .switchIfEmpty(users.findByEmail(req.email()).flatMap(u -> Mono.error(new RuntimeException("Email ya existe"))))
+                .switchIfEmpty(Mono.defer(() -> {
+                    var role = req.roleWanted().equals("PROFESSIONAL") ? "PROFESSIONAL" : "PATIENT";
+                    var enabled = !role.equals("PROFESSIONAL");
+                    cat.itacademy.s05.t02.n01.model.User u = new cat.itacademy.s05.t02.n01.model.User();
+                    u.setUsername(req.username());
+                    u.setEmail(req.email());
+                    u.setPasswordHash(passwordEncoder.encode(req.password()));
+                    u.setRole(role);
+                    u.setEnabled(enabled);
+                    return users.save(u).then();
+                }));
+    }
+}
