@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: consultorios
+    main:
+      web-application-type: reactive
+
+
+  r2dbc:
+    url: ${DB_R2DBC_URL:r2dbc:mysql://localhost:3306/consultorios}
+    username: ${DB_USERNAME:virginia}
+    password: ${DB_PASSWORD:Lisandro10}
+    pool:
+      enabled: true
+
+  flyway:
+    enabled: true
+    url: ${DB_JDBC_URL:jdbc:mysql://localhost:3306/consultorios}
+    user: ${DB_USERNAME:virginia}
+    password: ${DB_PASSWORD:Lisandro10}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  main:
+    web-application-type: reactive
+
+logging:
+  level:
+    root: INFO
+    org.springframework.r2dbc: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.context.annotation: DEBUG
+
+
+security:
+  jwt:
+#    secret: ${JWT_SECRET}
+    secret: 12345678901234567890123456789012
+    expiration-minutes: 60
+
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  reminders:
+    enabled: true
+    hours-before: 24
+    fixed-delay-ms: 300000

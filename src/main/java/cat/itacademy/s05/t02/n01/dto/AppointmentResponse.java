@@ -2,7 +2,7 @@ package cat.itacademy.s05.t02.n01.dto;
 
 import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
 import cat.itacademy.s05.t02.n01.enums.Specialty;
-import org.w3c.dom.DocumentType;
+import cat.itacademy.s05.t02.n01.enums.CoverageType;
 
 import java.time.LocalDateTime;
 
@@ -15,13 +15,11 @@ public record AppointmentResponse(
         AppointmentStatus status,
         String firstName,
         String lastName,
-        DocumentType documentType,
-        String documentNumber,
         String email,
         String phone,
+        CoverageType coverageType,
         String healthInsurance,
-        String healthPlan,
-        String affiliateNumber,
+        String preferredProfessional,
         String subject,
         String message
 ) {}

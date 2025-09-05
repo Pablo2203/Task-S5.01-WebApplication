@@ -1,3 +1,4 @@
+/*
 package cat.itacademy.s05.t02.n01.dto;
 
 import cat.itacademy.s05.t02.n01.enums.DocumentType;
@@ -56,3 +57,4 @@ public record CreateAppointmentRequest(
         @AssertTrue(message = "Debe aceptar las políticas de privacidad")
         boolean privacyConsent
 ) {}
+*/

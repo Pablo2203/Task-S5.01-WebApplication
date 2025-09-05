@@ -1,60 +1,27 @@
 package cat.itacademy.s05.t02.n01.mapper;
 
 import cat.itacademy.s05.t02.n01.dto.AppointmentResponse;
-import cat.itacademy.s05.t02.n01.dto.CreateAppointmentRequest;
-import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
+import cat.itacademy.s05.t02.n01.dto.CreateAppointmentRequestPublic;
+import cat.itacademy.s05.t02.n01.dto.UpdateAppointmentRequest;
 import cat.itacademy.s05.t02.n01.model.MedicalAppointment;
+import org.mapstruct.*;
 
-import java.time.LocalDateTime;
+@Mapper(componentModel = "spring")
+public interface AppointmentMapper {
 
-public class AppointmentMapper {
+    // Solicitud pública → entidad REQUESTED
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "patientId", ignore = true) // aún no asociado a paciente
+    @Mapping(target = "professionalId", ignore = true)
+    @Mapping(target = "endsAt", ignore = true)
+    @Mapping(target = "status", constant = "REQUESTED")
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
+    MedicalAppointment toEntityFromPublicRequest(CreateAppointmentRequestPublic dto);
 
-    // Convierte el DTO de creación + el patientId (si está logueado) a ENTIDAD lista para persistir
-    public static MedicalAppointment toEntity(CreateAppointmentRequest dto, Long patientId) {
-        return MedicalAppointment.builder()
-                .patientId(patientId)                  // viene del contexto de seguridad o null si invitado
-                .professionalId(dto.professionalId())  // desde el DTO
-                .specialty(dto.specialty())
-                .startsAt(dto.startsAt())
-                .status(AppointmentStatus.SCHEDULED)   // por defecto al crear
-                // snapshot de datos personales (los “congelamos” en la cita)
-                .firstName(dto.firstName())
-                .lastName(dto.lastName())
-                .documentType(dto.documentType())
-                .documentNumber(dto.documentNumber())
-                .email(dto.email())
-                .phone(dto.phone())
-                .healthInsurance(dto.healthInsurance())
-                .healthPlan(dto.healthPlan())
-                .affiliateNumber(dto.affiliateNumber())
-                .subject(dto.subject())
-                .message(dto.message())
-                .privacyConsent(dto.privacyConsent())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-    }
+    AppointmentResponse toResponse(MedicalAppointment entity);
 
-    // Convierte ENTIDAD → DTO de respuesta (lo que mandás al front)
-    public static AppointmentResponse toResponse(MedicalAppointment e) {
-        return new AppointmentResponse(
-                e.getId(),
-                e.getProfessionalId(),
-                e.getSpecialty(),
-                e.getStartsAt(),
-                e.getEndsAt(),
-                e.getStatus(),
-                e.getFirstName(),
-                e.getLastName(),
-                e.getDocumentType(),
-                e.getDocumentNumber(),
-                e.getEmail(),
-                e.getPhone(),
-                e.getHealthInsurance(),
-                e.getHealthPlan(),
-                e.getAffiliateNumber(),
-                e.getSubject(),
-                e.getMessage()
-        );
-    }
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
+    void updateEntityFromDto(UpdateAppointmentRequest dto, @MappingTarget MedicalAppointment entity);
 }
