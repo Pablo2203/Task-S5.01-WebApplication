@@ -44,3 +44,15 @@ app:
     enabled: true
     hours-before: 24
     fixed-delay-ms: 300000
+  whatsapp:
+    enabled: false
+    provider: none # meta | twilio | none
+    meta:
+      base-url: ${APP_WA_META_BASE_URL:https://graph.facebook.com/v20.0}
+      phone-number-id: ${APP_WA_META_PHONE_NUMBER_ID:}
+      token: ${APP_WA_META_TOKEN:}
+    twilio:
+      base-url: ${APP_WA_TWILIO_BASE_URL:https://api.twilio.com}
+      account-sid: ${APP_WA_TWILIO_ACCOUNT_SID:}
+      auth-token: ${APP_WA_TWILIO_AUTH_TOKEN:}
+      from: ${APP_WA_TWILIO_FROM:}

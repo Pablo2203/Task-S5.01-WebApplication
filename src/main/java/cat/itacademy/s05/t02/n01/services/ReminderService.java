@@ -23,9 +23,13 @@ public class ReminderService {
     private static final Logger log = LoggerFactory.getLogger(ReminderService.class);
 
     private final MedicalAppointmentRepository repository;
+    private final cat.itacademy.s05.t02.n01.services.whatsapp.WhatsAppSender whatsAppSender;
 
     @Value("${app.reminders.enabled:true}")
-    private boolean enabled;
+    private boolean remindersEnabled;
+
+    @Value("${app.whatsapp.enabled:false}")
+    private boolean whatsappEnabled;
 
     @Value("${app.reminders.hours-before:24}")
     private long hoursBefore;
@@ -33,7 +37,7 @@ public class ReminderService {
     // Ejecuta cada 5 minutos (configurable si querés)
     @Scheduled(fixedDelayString = "${app.reminders.fixed-delay-ms:300000}")
     public void run() {
-        if (!enabled) return;
+        if (!remindersEnabled) return;
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime until = now.plusHours(hoursBefore);
@@ -48,14 +52,24 @@ public class ReminderService {
     private Mono<MedicalAppointment> sendReminder(MedicalAppointment appt) {
         String message = buildMessage(appt);
         String phone = appt.getPhone() != null ? appt.getPhone() : "";
-        String waLink = "https://wa.me/" + phone + "?text=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
 
-        // Noop sender: log y marcamos como enviado
-        log.info("[REMINDER] to={} startsAt={} link={}", phone, appt.getStartsAt(), waLink);
+        if (!whatsappEnabled) {
+            String waLink = "https://wa.me/" + phone + "?text=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
+            log.info("[REMINDER-DRYRUN] to={} startsAt={} link={}", phone, appt.getStartsAt(), waLink);
+            // No marcamos como enviado en dry-run
+            return Mono.just(appt);
+        }
 
-        appt.setReminderSentAt(LocalDateTime.now());
-        appt.setUpdatedAt(LocalDateTime.now());
-        return repository.save(appt);
+        return whatsAppSender.sendText(phone, message)
+                .then(Mono.defer(() -> {
+                    appt.setReminderSentAt(LocalDateTime.now());
+                    appt.setUpdatedAt(LocalDateTime.now());
+                    return repository.save(appt);
+                }))
+                .onErrorResume(ex -> {
+                    log.warn("Reminder send failed to {}: {}", phone, ex.toString());
+                    return Mono.empty();
+                });
     }
 
     private String buildMessage(MedicalAppointment appt) {
@@ -74,4 +88,3 @@ public class ReminderService {
                 "Por favor, confirmá tu asistencia respondiendo este mensaje. Tel: +54 11 4296-4063.";
     }
 }
-
