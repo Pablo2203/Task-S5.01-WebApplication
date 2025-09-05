@@ -18,5 +18,10 @@ public interface MedicalAppointmentRepository extends ReactiveCrudRepository<Med
     // para detectar solapamientos de citas de un mismo profesional comparando rangos de tiempo
 
     Flux<MedicalAppointment> findByStatus(AppointmentStatus status);
-}
 
+    Flux<MedicalAppointment> findByStatusAndStartsAtBetweenAndReminderSentAtIsNull(
+            AppointmentStatus status,
+            LocalDateTime startsAtFrom,
+            LocalDateTime startsAtTo
+    );
+}

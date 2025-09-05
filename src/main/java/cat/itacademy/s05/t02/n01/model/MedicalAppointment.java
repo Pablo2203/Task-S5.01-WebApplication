@@ -96,6 +96,9 @@ public class MedicalAppointment {
     @Column("updated_at")
     private LocalDateTime updatedAt;
 
+    @Column("reminder_sent_at")
+    private LocalDateTime reminderSentAt;
+
     @Version
     private Long version;
 }

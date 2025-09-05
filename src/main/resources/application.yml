@@ -40,3 +40,7 @@ security:
 app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  reminders:
+    enabled: true
+    hours-before: 24
+    fixed-delay-ms: 300000
