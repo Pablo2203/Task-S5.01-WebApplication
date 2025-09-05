@@ -46,7 +46,7 @@ app:
     fixed-delay-ms: 300000
   whatsapp:
     enabled: false
-    provider: none # meta | twilio | none
+    provider: meta # meta | twilio | none
     meta:
       base-url: ${APP_WA_META_BASE_URL:https://graph.facebook.com/v20.0}
       phone-number-id: ${APP_WA_META_PHONE_NUMBER_ID:}
