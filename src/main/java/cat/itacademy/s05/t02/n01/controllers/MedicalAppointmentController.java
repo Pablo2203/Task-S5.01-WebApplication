@@ -20,6 +20,8 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class MedicalAppointmentController {
     private final MedicalAppointmentService service;
     private final MedicalAppointmentRepository repository;
     private final AppointmentMapper mapper;
+    private final cat.itacademy.s05.t02.n01.repositories.UserRepository users;
 
     // Public: crear solicitud de turno (REQUESTED)
     @PostMapping(value = "/api/appointments/requests", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -56,6 +59,30 @@ public class MedicalAppointmentController {
         return repository.findById(id).map(this::toWhatsAppTemplate);
     }
 
+    // Professional: listar citas propias (SCHEDULED) en rango
+    @GetMapping("/api/professional/appointments")
+    public Flux<AppointmentResponse> getMyAppointments(Authentication auth,
+                                                       @RequestParam("from") String from,
+                                                       @RequestParam("to") String to) {
+        LocalDateTime fromDt = LocalDateTime.parse(from);
+        LocalDateTime toDt = LocalDateTime.parse(to);
+        String username = auth.getName();
+        return users.findByUsername(username)
+                .flatMapMany(u -> repository.findByProfessionalIdAndStatusAndStartsAtBetween(u.getId(), AppointmentStatus.SCHEDULED, fromDt, toDt))
+                .map(mapper::toResponse);
+    }
+
+    // Admin: listar citas de un profesional por rango
+    @GetMapping("/api/admin/professionals/{userId}/appointments")
+    public Flux<AppointmentResponse> getAppointmentsByProfessional(@PathVariable Long userId,
+                                                                   @RequestParam("from") String from,
+                                                                   @RequestParam("to") String to) {
+        LocalDateTime fromDt = LocalDateTime.parse(from);
+        LocalDateTime toDt = LocalDateTime.parse(to);
+        return repository.findByProfessionalIdAndStatusAndStartsAtBetween(userId, AppointmentStatus.SCHEDULED, fromDt, toDt)
+                .map(mapper::toResponse);
+    }
+
     private WhatsAppTemplateResponse toWhatsAppTemplate(MedicalAppointment appt) {
         String nombre = appt.getFirstName();
         String especialidad = appt.getSpecialty() != null ? appt.getSpecialty().name().toLowerCase() : "";
@@ -77,4 +104,3 @@ public class MedicalAppointmentController {
         return new WhatsAppTemplateResponse(base, waLink);
     }
 }
-
