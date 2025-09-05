@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequiredArgsConstructor
@@ -82,6 +83,68 @@ public class MedicalAppointmentController {
         return repository.findByProfessionalIdAndStatusAndStartsAtBetween(userId, AppointmentStatus.SCHEDULED, fromDt, toDt)
                 .map(mapper::toResponse);
     }
+
+    // Professional: export CSV of own appointments
+    @GetMapping("/api/professional/appointments/export")
+    public Mono<ResponseEntity<String>> exportMyAppointmentsCsv(Authentication auth,
+                                                                @RequestParam("from") String from,
+                                                                @RequestParam("to") String to) {
+        LocalDateTime fromDt = LocalDateTime.parse(from);
+        LocalDateTime toDt = LocalDateTime.parse(to);
+        String username = auth.getName();
+        return users.findByUsername(username)
+                .flatMapMany(u -> repository.findByProfessionalIdAndStatusAndStartsAtBetween(u.getId(), AppointmentStatus.SCHEDULED, fromDt, toDt))
+                .collectList()
+                .map(list -> csvResponse(list, "agenda.csv"));
+    }
+
+    // Admin: export CSV of a professional's appointments
+    @GetMapping("/api/admin/professionals/{userId}/appointments/export")
+    public Mono<ResponseEntity<String>> exportAppointmentsByProfessionalCsv(@PathVariable Long userId,
+                                                                            @RequestParam("from") String from,
+                                                                            @RequestParam("to") String to) {
+        LocalDateTime fromDt = LocalDateTime.parse(from);
+        LocalDateTime toDt = LocalDateTime.parse(to);
+        return repository.findByProfessionalIdAndStatusAndStartsAtBetween(userId, AppointmentStatus.SCHEDULED, fromDt, toDt)
+                .collectList()
+                .map(list -> csvResponse(list, "agenda-" + userId + ".csv"));
+    }
+
+    private ResponseEntity<String> csvResponse(java.util.List<MedicalAppointment> list, String filename) {
+        String csv = toCsv(list);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.valueOf("text/csv; charset=utf-8"))
+                .body(csv);
+    }
+
+    private String toCsv(java.util.List<MedicalAppointment> list) {
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        StringBuilder sb = new StringBuilder();
+        sb.append("start,end,patient_first,patient_last,email,phone,coverage,insurance,status\n");
+        for (MedicalAppointment a : list) {
+            String start = a.getStartsAt() != null ? a.getStartsAt().format(df) : "";
+            String end = a.getEndsAt() != null ? a.getEndsAt().format(df) : "";
+            sb.append(q(start)).append(',')
+              .append(q(end)).append(',')
+              .append(q(nz(a.getFirstName()))).append(',')
+              .append(q(nz(a.getLastName()))).append(',')
+              .append(q(nz(a.getEmail()))).append(',')
+              .append(q(nz(a.getPhone()))).append(',')
+              .append(q(a.getCoverageType() != null ? a.getCoverageType().name() : "")).append(',')
+              .append(q(nz(a.getHealthInsurance()))).append(',')
+              .append(q(a.getStatus() != null ? a.getStatus().name() : ""))
+              .append('\n');
+        }
+        return sb.toString();
+    }
+
+    private static String q(String s) {
+        String v = s == null ? "" : s.replace("\"", "\"\"");
+        return '"' + v + '"';
+    }
+
+    private static String nz(String s) { return s == null ? "" : s; }
 
     private WhatsAppTemplateResponse toWhatsAppTemplate(MedicalAppointment appt) {
         String nombre = appt.getFirstName();
