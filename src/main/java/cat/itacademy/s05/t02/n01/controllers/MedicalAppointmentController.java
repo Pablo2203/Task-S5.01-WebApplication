@@ -22,9 +22,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import org.springframework.security.core.Authentication;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
 
 @RestController
+@Tag(name = "Appointments")
 @RequiredArgsConstructor
 public class MedicalAppointmentController {
 
@@ -35,6 +38,7 @@ public class MedicalAppointmentController {
 
     // Public: crear solicitud de turno (REQUESTED)
     @PostMapping(value = "/api/appointments/requests", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Crear solicitud pública de turno")
     public Mono<ResponseEntity<AppointmentResponse>> createRequest(@RequestBody CreateAppointmentRequestPublic request) {
         return service.createRequest(request)
                 .map(resp -> ResponseEntity.created(URI.create("/api/admin/appointments/" + resp.id()))
@@ -43,6 +47,7 @@ public class MedicalAppointmentController {
 
     // Admin: listar solicitudes en estado REQUESTED
     @GetMapping("/api/admin/appointments/requests")
+    @Operation(summary = "Listar solicitudes REQUESTED (ADMIN)")
     public Flux<AppointmentResponse> getRequestedAppointments() {
         return repository.findByStatus(AppointmentStatus.REQUESTED)
                 .map(mapper::toResponse);
@@ -50,18 +55,21 @@ public class MedicalAppointmentController {
 
     // Admin: agendar una solicitud
     @PatchMapping(value = "/api/admin/appointments/{id}/schedule", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Agendar una solicitud REQUESTED (ADMIN)")
     public Mono<AppointmentResponse> schedule(@PathVariable Long id, @RequestBody ScheduleAppointmentRequest request) {
         return service.scheduleAppointment(id, request);
     }
 
     // Admin: plantilla de recordatorio WhatsApp para una cita
     @GetMapping("/api/admin/appointments/{id}/whatsapp-template")
+    @Operation(summary = "Obtener plantilla WhatsApp para recordatorio (ADMIN)")
     public Mono<WhatsAppTemplateResponse> getWhatsAppTemplate(@PathVariable Long id) {
         return repository.findById(id).map(this::toWhatsAppTemplate);
     }
 
     // Professional: listar citas propias (SCHEDULED) en rango
     @GetMapping("/api/professional/appointments")
+    @Operation(summary = "Listar mis citas SCHEDULED (PROFESSIONAL)")
     public Flux<AppointmentResponse> getMyAppointments(Authentication auth,
                                                        @RequestParam("from") String from,
                                                        @RequestParam("to") String to) {
@@ -75,6 +83,7 @@ public class MedicalAppointmentController {
 
     // Admin: listar citas de un profesional por rango
     @GetMapping("/api/admin/professionals/{userId}/appointments")
+    @Operation(summary = "Listar citas de un profesional (ADMIN)")
     public Flux<AppointmentResponse> getAppointmentsByProfessional(@PathVariable Long userId,
                                                                    @RequestParam("from") String from,
                                                                    @RequestParam("to") String to) {
@@ -86,6 +95,7 @@ public class MedicalAppointmentController {
 
     // Professional: export CSV of own appointments
     @GetMapping("/api/professional/appointments/export")
+    @Operation(summary = "Exportar CSV de mis citas (PROFESSIONAL)")
     public Mono<ResponseEntity<String>> exportMyAppointmentsCsv(Authentication auth,
                                                                 @RequestParam("from") String from,
                                                                 @RequestParam("to") String to) {
@@ -100,6 +110,7 @@ public class MedicalAppointmentController {
 
     // Admin: export CSV of a professional's appointments
     @GetMapping("/api/admin/professionals/{userId}/appointments/export")
+    @Operation(summary = "Exportar CSV citas de un profesional (ADMIN)")
     public Mono<ResponseEntity<String>> exportAppointmentsByProfessionalCsv(@PathVariable Long userId,
                                                                             @RequestParam("from") String from,
                                                                             @RequestParam("to") String to) {
