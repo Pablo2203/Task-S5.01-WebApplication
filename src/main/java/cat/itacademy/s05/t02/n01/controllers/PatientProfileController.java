@@ -3,6 +3,7 @@ package cat.itacademy.s05.t02.n01.controllers;
 import cat.itacademy.s05.t02.n01.model.PatientProfile;
 import cat.itacademy.s05.t02.n01.services.PatientProfileService;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/patients")
@@ -15,12 +16,12 @@ public class PatientProfileController {
     }
 
     @PostMapping
-    public PatientProfile create(@RequestBody PatientProfile profile) {
+    public Mono<PatientProfile> create(@RequestBody PatientProfile profile) {
         return patientProfileService.save(profile);
     }
 
     @GetMapping("/{id}")
-    public PatientProfile getById(@PathVariable Long id) {
+    public Mono<PatientProfile> getById(@PathVariable Long id) {
         return patientProfileService.findById(id);
     }
 }
