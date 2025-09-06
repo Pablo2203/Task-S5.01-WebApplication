@@ -29,7 +29,9 @@ public class AuthController {
 
     @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+        // Permitir login usando username o email en el mismo campo
         return users.findByUsername(req.username())
+                .switchIfEmpty(users.findByEmail(req.username()))
                 .switchIfEmpty(Mono.error(new RuntimeException("Credenciales inválidas")))
                 .flatMap(u -> {
                     if (!u.isEnabled() || !passwordEncoder.matches(req.password(), u.getPasswordHash())) {
