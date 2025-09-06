@@ -18,15 +18,13 @@ public class PatientProfileServiceImpl implements PatientProfileService {
     }
 
     @Override
-    public PatientProfile save(PatientProfile patientProfile) {
+    public Mono<PatientProfile> save(PatientProfile patientProfile) {
         return patientProfileRepository.save(patientProfile);
     }
 
     @Override
-    public PatientProfile findById(Long patientId) {
+    public Mono<PatientProfile> findById(Long patientId) {
         return patientProfileRepository.findById(patientId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado"));
-
-
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente no encontrado")));
     }
 }
