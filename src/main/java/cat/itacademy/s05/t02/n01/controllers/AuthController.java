@@ -8,6 +8,7 @@ import cat.itacademy.s05.t02.n01.dto.RegisterRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,7 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Login con username o email", description = "Devuelve JWT y roles del usuario si las credenciales son válidas")
     public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
         // Permitir login usando username o email en el mismo campo
         return users.findByUsername(req.username())
@@ -45,10 +47,12 @@ public class AuthController {
     }
 
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registro de usuario", description = "Crea cuenta de PATIENT habilitada o PROFESSIONAL pendiente de aprobación")
     public Mono<Void> register(@Valid @RequestBody RegisterRequest req) {
         return users.findByUsername(req.username())
-                .flatMap(u -> Mono.error(new RuntimeException("Usuario ya existe")))
-                .switchIfEmpty(users.findByEmail(req.email()).flatMap(u -> Mono.error(new RuntimeException("Email ya existe"))))
+                .flatMap(u -> Mono.<cat.itacademy.s05.t02.n01.model.User>error(new RuntimeException("Usuario ya existe")))
+                .switchIfEmpty(users.findByEmail(req.email())
+                        .flatMap(u -> Mono.<cat.itacademy.s05.t02.n01.model.User>error(new RuntimeException("Email ya existe"))))
                 .switchIfEmpty(Mono.defer(() -> {
                     var role = req.roleWanted().equals("PROFESSIONAL") ? "PROFESSIONAL" : "PATIENT";
                     var enabled = !role.equals("PROFESSIONAL");
@@ -58,7 +62,8 @@ public class AuthController {
                     u.setPasswordHash(passwordEncoder.encode(req.password()));
                     u.setRole(role);
                     u.setEnabled(enabled);
-                    return users.save(u).then();
-                }));
+                    return users.save(u);
+                }))
+                .then();
     }
 }
