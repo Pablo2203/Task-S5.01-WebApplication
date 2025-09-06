@@ -28,7 +28,7 @@ public class MedicalAppointment {
 
     // Relación con dominio
     @Column("patient_id")
-    @NotNull
+    @Nullable
     private Long patientId;
 
     @Column("professional_id")
@@ -67,8 +67,11 @@ public class MedicalAppointment {
     @Pattern(regexp = "^[0-9+()\\s-]{6,20}$")
     private String phone;
 
-    @Column("coverageType")
-    private CoverageType coverageType; // “OSDE”, “Swiss Medical”, etc.
+    @Column("coverage_type")
+    private CoverageType coverageType; // INSURANCE o PRIVATE
+
+    @Column("health_insurance")
+    private String healthInsurance; // nombre de la obra social informada
 
     @Column("health_plan")
     private String healthPlan; // plan/planilla/opcional
@@ -83,12 +86,18 @@ public class MedicalAppointment {
     @Column("message")
     private String message;
 
+    @Column("preferred_professional")
+    private String preferredProfessional;
+
     // Auditoría mínima
     @Column("created_at")
     private LocalDateTime createdAt;
 
     @Column("updated_at")
     private LocalDateTime updatedAt;
+
+    @Column("reminder_sent_at")
+    private LocalDateTime reminderSentAt;
 
     @Version
     private Long version;

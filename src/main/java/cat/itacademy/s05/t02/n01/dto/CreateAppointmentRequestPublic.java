@@ -1,7 +1,6 @@
 package cat.itacademy.s05.t02.n01.dto;
 
 import cat.itacademy.s05.t02.n01.enums.CoverageType;
-import cat.itacademy.s05.t02.n01.enums.HealthInsurance;
 import cat.itacademy.s05.t02.n01.enums.Specialty;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
@@ -25,10 +24,13 @@ public record CreateAppointmentRequestPublic(
         CoverageType coverageType,
 
         @Nullable
-        HealthInsurance healthInsurance,   // requerido solo si coverageType=INSURANCE (validación lógica en service)
+        String healthInsurance,   // requerido solo si coverageType=INSURANCE (validación lógica en service)
 
         @NotNull
         Specialty specialty,
+
+        @Size(max = 100)
+        String preferredProfessional,
 
         @Size(max = 255)
         String subject,
