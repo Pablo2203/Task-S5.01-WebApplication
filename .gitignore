@@ -5,8 +5,8 @@ target/
 !**/src/test/**/target/
 !**/src/main/resources/application.yml
 uploads/
-
-
+!**/scripts/dev-env.sh
+!**/scripts/*.sh
 ### STS ###
 .apt_generated
 .classpath
