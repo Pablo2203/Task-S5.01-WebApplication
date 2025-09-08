@@ -27,11 +27,19 @@ public class SecurityConfig {
                 .authenticationManager(authenticationManager)
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
-                        .pathMatchers("/auth/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .pathMatchers(
+                                "/auth/",
+                                "/swagger-ui.html",
+                                "/swagger-ui/",
+                                "/v3/api-docs",
+                                "/v3/api-docs/",
+                                "/v3/api-docs.yaml",
+                                "/uploads/**"
+                        ).permitAll()
                         .pathMatchers("/api/appointments/requests").permitAll()
-                        .pathMatchers("/api/admin/**").hasRole("ADMIN")
-                        .pathMatchers("/api/professional/**").hasAnyRole("PROFESSIONAL", "ADMIN")
-                        .pathMatchers("/api/patient/**").hasAnyRole("PATIENT", "ADMIN")
+                        .pathMatchers("/api/admin/").hasRole("ADMIN")
+                        .pathMatchers("/api/professional/").hasAnyRole("PROFESSIONAL", "ADMIN")
+                        .pathMatchers("/api/patient/").hasAnyRole("PATIENT", "ADMIN")
                         .anyExchange().authenticated())
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
