@@ -12,12 +12,35 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+
 
 @Configuration
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
     @Bean
+    @Order(0)
+    public SecurityWebFilterChain swaggerHttpBasic(ServerHttpSecurity http) {
+        return http
+                .securityMatcher(ServerWebExchangeMatchers.matchers(
+                        new PathPatternParserServerWebExchangeMatcher("/swagger-ui.html"),
+                        new PathPatternParserServerWebExchangeMatcher("/swagger-ui/"),
+                        new PathPatternParserServerWebExchangeMatcher("/webjars/"),
+                        new PathPatternParserServerWebExchangeMatcher("/v3/api-docs"),
+                        new PathPatternParserServerWebExchangeMatcher("/v3/api-docs/**"),
+                        new PathPatternParserServerWebExchangeMatcher("/v3/api-docs.yaml")
+                ))
+                .authorizeExchange(ex -> ex.anyExchange().authenticated())
+                .httpBasic(Customizer.withDefaults())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .build();
+    }
+    @Bean
+    @Order(1)
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity http,
             JwtService jwtService,
@@ -28,25 +51,15 @@ public class SecurityConfig {
                 .authenticationManager(authenticationManager)
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
-                        .pathMatchers(HttpMethod.GET,
-                                "/swagger-ui.html",
-                                "/swagger-ui/",
-                                "/webjars/",
-                                "/v3/api-docs",
-                                "/v3/api-docs/",
-                                "/v3/api-docs.yaml",
-                                "/uploads/",
-                                "//*.css", "//.js", "//.png", "//*.ico", "//*.html"
-                        ).permitAll()
-                        .pathMatchers("/auth/").permitAll()
                         .pathMatchers("/api/appointments/requests").permitAll()
                         .pathMatchers("/api/admin/").hasRole("ADMIN")
                         .pathMatchers("/api/professional/").hasAnyRole("PROFESSIONAL", "ADMIN")
-                        .pathMatchers("/api/patient/").hasAnyRole("PATIENT", "ADMIN")
+                        .pathMatchers("/api/patient/**").hasAnyRole("PATIENT", "ADMIN")
                         .anyExchange().authenticated())
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .build();
+
     }
 
     @Bean
