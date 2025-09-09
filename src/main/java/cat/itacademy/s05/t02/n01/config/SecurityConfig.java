@@ -5,6 +5,7 @@ import cat.itacademy.s05.t02.n01.services.JwtService;
 import cat.itacademy.s05.t02.n01.services.UserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -27,15 +28,17 @@ public class SecurityConfig {
                 .authenticationManager(authenticationManager)
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
-                        .pathMatchers(
-                                "/auth/",
+                        .pathMatchers(HttpMethod.GET,
                                 "/swagger-ui.html",
                                 "/swagger-ui/",
+                                "/webjars/",
                                 "/v3/api-docs",
                                 "/v3/api-docs/",
                                 "/v3/api-docs.yaml",
-                                "/uploads/"
+                                "/uploads/",
+                                "//*.css", "//.js", "//.png", "//*.ico", "//*.html"
                         ).permitAll()
+                        .pathMatchers("/auth/").permitAll()
                         .pathMatchers("/api/appointments/requests").permitAll()
                         .pathMatchers("/api/admin/").hasRole("ADMIN")
                         .pathMatchers("/api/professional/").hasAnyRole("PROFESSIONAL", "ADMIN")
