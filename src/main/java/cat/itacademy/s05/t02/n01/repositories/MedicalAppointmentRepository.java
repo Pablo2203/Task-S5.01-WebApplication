@@ -31,4 +31,11 @@ public interface MedicalAppointmentRepository extends ReactiveCrudRepository<Med
             LocalDateTime from,
             LocalDateTime to
     );
+    Flux<MedicalAppointment> findByPatientIdAndStatusAndStartsAtBetween(
+            Long patientId,
+            AppointmentStatus status,
+            LocalDateTime from,
+            LocalDateTime to
+    );
+
 }

@@ -120,7 +120,25 @@ public class MedicalAppointmentController {
                 .collectList()
                 .map(list -> csvResponse(list, "agenda-" + userId + ".csv"));
     }
-
+    @GetMapping("/api/patient/appointments")
+    @Operation(summary = "Listar mis turnos SCHEDULED (PATIENT)")
+    public Flux<AppointmentResponse> getMyAppointmentsAsPatient(
+            Authentication auth,
+            @RequestParam("from") String from,
+            @RequestParam("to") String to
+    ) {
+        LocalDateTime fromDt = LocalDateTime.parse(from);
+        LocalDateTime toDt = LocalDateTime.parse(to);
+        String username = auth.getName();
+        return users.findByUsername(username)
+                .flatMapMany(u -> repository.findByPatientIdAndStatusAndStartsAtBetween(
+                        u.getId(),
+                        AppointmentStatus.SCHEDULED,
+                        fromDt,
+                        toDt
+                ))
+                .map(mapper::toResponse);
+    }
     private ResponseEntity<String> csvResponse(java.util.List<MedicalAppointment> list, String filename) {
         String csv = toCsv(list);
         return ResponseEntity.ok()
