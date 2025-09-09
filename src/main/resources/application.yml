@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: consultorios
@@ -31,7 +32,7 @@ logging:
 
 security:
   jwt:
-#    secret: ${JWT_SECRET}
+    #    secret: ${JWT_SECRET}
     secret: 12345678901234567890123456789012
     expiration-minutes: 60
 
@@ -54,3 +55,4 @@ app:
       account-sid: ${APP_WA_TWILIO_ACCOUNT_SID:}
       auth-token: ${APP_WA_TWILIO_AUTH_TOKEN:}
       from: ${APP_WA_TWILIO_FROM:}
+
