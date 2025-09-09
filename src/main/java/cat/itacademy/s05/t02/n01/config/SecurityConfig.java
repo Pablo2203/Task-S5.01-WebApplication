@@ -5,7 +5,6 @@ import cat.itacademy.s05.t02.n01.services.JwtService;
 import cat.itacademy.s05.t02.n01.services.UserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -14,8 +13,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+
 
 
 @Configuration
@@ -24,21 +27,34 @@ public class SecurityConfig {
 
     @Bean
     @Order(0)
-    public SecurityWebFilterChain swaggerHttpBasic(ServerHttpSecurity http) {
+    public SecurityWebFilterChain swaggerBasicChain(ServerHttpSecurity http,
+                                                    PasswordEncoder passwordEncoder) {
+// Usuario SÓLO para Swagger: swagger / Pablo2203
+        var uds = new MapReactiveUserDetailsService(
+                User.withUsername("swagger")
+                        .password(passwordEncoder.encode("Pablo2203"))
+                        .roles("SWAGGER")
+                        .build()
+        );
+        var basicAuthManager = new UserDetailsRepositoryReactiveAuthenticationManager(uds);
+        basicAuthManager.setPasswordEncoder(passwordEncoder);
+
         return http
-                .securityMatcher(ServerWebExchangeMatchers.matchers(
-                        new PathPatternParserServerWebExchangeMatcher("/swagger-ui.html"),
-                        new PathPatternParserServerWebExchangeMatcher("/swagger-ui/"),
-                        new PathPatternParserServerWebExchangeMatcher("/webjars/"),
-                        new PathPatternParserServerWebExchangeMatcher("/v3/api-docs"),
-                        new PathPatternParserServerWebExchangeMatcher("/v3/api-docs/**"),
-                        new PathPatternParserServerWebExchangeMatcher("/v3/api-docs.yaml")
+                .securityMatcher(ServerWebExchangeMatchers.pathMatchers(
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/webjars/**",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml"
                 ))
+                .authenticationManager(basicAuthManager)      // usa el in-memory de arriba
                 .authorizeExchange(ex -> ex.anyExchange().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .build();
     }
+
     @Bean
     @Order(1)
     public SecurityWebFilterChain securityWebFilterChain(
@@ -59,7 +75,6 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .build();
-
     }
 
     @Bean
