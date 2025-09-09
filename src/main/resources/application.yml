@@ -1,8 +1,7 @@
+
 spring:
   application:
     name: consultorios
-    main:
-      web-application-type: reactive
 
 
   r2dbc:
@@ -26,14 +25,14 @@ spring:
 logging:
   level:
     root: INFO
-    org.springframework.r2dbc: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.context.annotation: DEBUG
+    org.springframework.r2dbc: INFO
+    org.springframework.security: INFO
+    org.springframework.context.annotation: INFO
 
 
 security:
   jwt:
-#    secret: ${JWT_SECRET}
+    #    secret: ${JWT_SECRET}
     secret: 12345678901234567890123456789012
     expiration-minutes: 60
 
@@ -56,3 +55,4 @@ app:
       account-sid: ${APP_WA_TWILIO_ACCOUNT_SID:}
       auth-token: ${APP_WA_TWILIO_AUTH_TOKEN:}
       from: ${APP_WA_TWILIO_FROM:}
+

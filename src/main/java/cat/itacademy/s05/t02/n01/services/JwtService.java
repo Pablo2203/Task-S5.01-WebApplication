@@ -28,10 +28,12 @@ public class JwtService {
 
     public JwtService(@Value("${security.jwt.secret}") String secret,
                       @Value("${security.jwt.expiration-minutes}") long expiration) {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException("security.jwt.secret debe tener al menos 32 caracteres");
+        }
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         this.expirationMinutes = expiration;
     }
-
 
     public String generateToken(String username, Collection<String> roles) {
         Instant now = Instant.now();
