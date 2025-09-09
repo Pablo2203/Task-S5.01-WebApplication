@@ -1,0 +1,44 @@
+package cat.itacademy.s05.t02.n01.services;
+
+import cat.itacademy.s05.t02.n01.dto.AppointmentResponse;
+import cat.itacademy.s05.t02.n01.dto.ScheduleAppointmentRequest;
+import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
+import cat.itacademy.s05.t02.n01.mapper.AppointmentMapper;
+import cat.itacademy.s05.t02.n01.model.MedicalAppointment;
+import cat.itacademy.s05.t02.n01.repositories.MedicalAppointmentRepository;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.time.LocalDateTime;
+
+class MedicalAppointmentServiceTest {
+
+    @Test
+    void schedule_conflict_when_overlapping() {
+        MedicalAppointmentRepository repo = Mockito.mock(MedicalAppointmentRepository.class);
+        AppointmentMapper mapper = Mockito.mock(AppointmentMapper.class);
+        MedicalAppointmentService service = new MedicalAppointmentService(repo, mapper);
+
+        MedicalAppointment existing = MedicalAppointment.builder()
+                .id(10L)
+                .status(AppointmentStatus.REQUESTED)
+                .build();
+
+        Mockito.when(repo.findById(10L)).thenReturn(Mono.just(existing));
+        Mockito.when(repo.existsByProfessionalIdAndStartsAtLessThanAndEndsAtGreaterThan(Mockito.eq(1L), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(true));
+
+        ScheduleAppointmentRequest req = new ScheduleAppointmentRequest(1L, LocalDateTime.now(), null);
+
+        StepVerifier.create(service.scheduleAppointment(10L, req))
+                .expectErrorSatisfies(err -> {
+                    assert err instanceof ResponseStatusException;
+                    ResponseStatusException ex = (ResponseStatusException) err;
+                    assert ex.getStatusCode().value() == 409;
+                })
+                .verify();
+    }
+}

@@ -5,8 +5,7 @@ import reactor.core.publisher.Mono;
 
 public interface PatientProfileService {
 
-    PatientProfile save(PatientProfile patientProfile);
+    Mono<PatientProfile> save(PatientProfile patientProfile);
 
-    PatientProfile findById(Long patientId);
+    Mono<PatientProfile> findById(Long patientId);
 }
-
