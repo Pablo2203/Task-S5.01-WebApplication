@@ -33,8 +33,19 @@ public class AdminUsersController {
                 .map(this::toSummary);
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<Void> delete(@PathVariable Long id) {
+        return users.deleteById(id);
+    }
+
     private UserSummary toSummary(User u) {
         return new UserSummary(u.getId(), u.getUsername(), u.getEmail(), u.isEnabled(), u.getRole());
     }
-}
 
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Flux<UserSummary> listAll() {
+        return users.findAll().map(this::toSummary);
+    }
+}

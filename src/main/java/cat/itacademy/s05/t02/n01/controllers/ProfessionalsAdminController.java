@@ -21,15 +21,30 @@ public class ProfessionalsAdminController {
 
     @GetMapping
     public Flux<ProfessionalSummary> list(@RequestParam(name = "specialty", required = false) String specialty) {
-        // Hoy no hay vínculo profesional-especialidad en el modelo de usuarios; devolvemos todos con rol PROFESSIONAL
+        if (specialty != null && !specialty.isBlank()) {
+            return profiles.findBySpecialty(specialty)
+                    .flatMap(p -> users.findById(p.getUserId())
+                            .map(u -> new ProfessionalSummary(
+                                    u.getId(),
+                                    nameFromProfileOrUser(p, u),
+                                    u.getEmail()
+                            )));
+        }
         return users.findByRole("PROFESSIONAL")
                 .flatMap(u -> profiles.findByUserId(u.getId())
                         .defaultIfEmpty(null)
                         .map(p -> new ProfessionalSummary(
                                 u.getId(),
-                                p != null && p.getFirstName() != null ? (p.getFirstName() + " " + (p.getLastName() != null ? p.getLastName() : "")) : u.getUsername(),
+                                nameFromProfileOrUser(p, u),
                                 u.getEmail()
                         )));
+    }
+
+    private String nameFromProfileOrUser(cat.itacademy.s05.t02.n01.model.ProfessionalProfile p, User u) {
+        if (p != null && p.getFirstName() != null) {
+            return p.getFirstName() + " " + (p.getLastName() != null ? p.getLastName() : "");
+        }
+        return u.getUsername();
     }
 
     // inlined in map

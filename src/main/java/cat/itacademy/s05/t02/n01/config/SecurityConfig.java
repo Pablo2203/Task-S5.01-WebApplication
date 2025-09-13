@@ -13,6 +13,10 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.server.WebFilter;
+import org.springframework.http.HttpStatus;
+import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableReactiveMethodSecurity
@@ -29,6 +33,10 @@ public class SecurityConfig {
         return http
                 .securityContextRepository(new JwtSecurityContextRepository(jwtService, userDetailsService))
                 .authenticationManager(authenticationManager)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((swe, e) -> Mono.fromRunnable(() -> swe.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
+                        .accessDeniedHandler((swe, e) -> Mono.fromRunnable(() -> swe.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
+                )
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
@@ -53,5 +61,17 @@ public class SecurityConfig {
                 new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService);
         authManager.setPasswordEncoder(passwordEncoder);
         return authManager;
+    }
+
+    // Elimina cualquier cabecera WWW-Authenticate para evitar prompt Basic del navegador
+    @Bean
+    public WebFilter suppressWwwAuthenticateHeader() {
+        return (exchange, chain) -> {
+            exchange.getResponse().beforeCommit(() -> {
+                exchange.getResponse().getHeaders().remove(HttpHeaders.WWW_AUTHENTICATE);
+                return Mono.empty();
+            });
+            return chain.filter(exchange);
+        };
     }
 }

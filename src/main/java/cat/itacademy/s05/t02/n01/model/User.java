@@ -36,6 +36,9 @@ public class User {
     @Column("enabled")
     private boolean enabled;
 
+    @Column("email_verified")
+    private boolean emailVerified;
+
     @Column("created_at")
     private LocalDateTime createdAt;
 

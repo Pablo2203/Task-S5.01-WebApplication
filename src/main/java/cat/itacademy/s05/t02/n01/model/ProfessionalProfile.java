@@ -6,6 +6,8 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import cat.itacademy.s05.t02.n01.enums.Specialty;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -32,7 +34,7 @@ public class ProfessionalProfile {
     private String studies;
 
     @Column("specialty")
-    private String specialty; // usamos String para flexibilidad
+    private Specialty specialty; 
 
     @Column("bio")
     private String bio;

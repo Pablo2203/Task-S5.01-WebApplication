@@ -67,6 +67,25 @@ public class JwtService {
             throw new BadCredentialsException("Token inválido", e);
         }
     }
+
+    public String generateTokenWithPurpose(String subject, Collection<String> roles, String purpose, long minutes) {
+        Instant now = Instant.now();
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject(subject)
+                .claim("roles", roles)
+                .claim("purpose", purpose)
+                .issueTime(Date.from(now))
+                .expirationTime(Date.from(now.plus(minutes, ChronoUnit.MINUTES)))
+                .build();
+
+        try {
+            SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
+            signedJWT.sign(new MACSigner(secretKey));
+            return signedJWT.serialize();
+        } catch (JOSEException e) {
+            throw new IllegalStateException("Error al firmar el JWT", e);
+        }
+    }
 }
 
 

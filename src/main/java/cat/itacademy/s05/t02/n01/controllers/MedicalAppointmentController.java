@@ -3,6 +3,8 @@ package cat.itacademy.s05.t02.n01.controllers;
 import cat.itacademy.s05.t02.n01.dto.AppointmentResponse;
 import cat.itacademy.s05.t02.n01.dto.CreateAppointmentRequestPublic;
 import cat.itacademy.s05.t02.n01.dto.ScheduleAppointmentRequest;
+import cat.itacademy.s05.t02.n01.dto.DirectAppointmentRequest;
+import cat.itacademy.s05.t02.n01.dto.UpdateAppointmentRequest;
 import cat.itacademy.s05.t02.n01.dto.WhatsAppTemplateResponse;
 import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
 import cat.itacademy.s05.t02.n01.mapper.AppointmentMapper;
@@ -58,6 +60,33 @@ public class MedicalAppointmentController {
     @Operation(summary = "Agendar una solicitud REQUESTED (ADMIN)")
     public Mono<AppointmentResponse> schedule(@PathVariable Long id, @RequestBody ScheduleAppointmentRequest request) {
         return service.scheduleAppointment(id, request);
+    }
+
+    // Admin: crear cita directa SCHEDULED
+    @PostMapping(value = "/api/admin/appointments", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Crear cita directa (ADMIN)")
+    public Mono<AppointmentResponse> createDirectByAdmin(@RequestBody DirectAppointmentRequest request) {
+        return service.createDirect(request);
+    }
+
+    // Admin: actualizar cita (horario/estado)
+    @PatchMapping(value = "/api/admin/appointments/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Actualizar cita (ADMIN)")
+    public Mono<AppointmentResponse> updateByAdmin(@PathVariable Long id, @RequestBody UpdateAppointmentRequest request) {
+        return service.updateAppointment(id, request);
+    }
+
+    // Admin: cancelar cita
+    @PatchMapping("/api/admin/appointments/{id}/cancel")
+    @Operation(summary = "Cancelar cita (ADMIN)")
+    public Mono<Void> cancelByAdmin(@PathVariable Long id) {
+        return repository.findById(id)
+                .doOnNext(a -> {
+                    a.setStatus(AppointmentStatus.CANCELLED);
+                    a.setUpdatedAt(java.time.LocalDateTime.now());
+                })
+                .flatMap(repository::save)
+                .then();
     }
 
     // Admin: plantilla de recordatorio WhatsApp para una cita
@@ -138,6 +167,61 @@ public class MedicalAppointmentController {
                         toDt
                 ))
                 .map(mapper::toResponse);
+    }
+
+    // Professional: crear cita directa para sí mismo
+    @PostMapping(value = "/api/professional/appointments", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Crear cita directa (PROFESSIONAL)")
+    public Mono<AppointmentResponse> createDirectByPro(Authentication auth, @RequestBody DirectAppointmentRequest request) {
+        String username = auth.getName();
+        return users.findByUsername(username)
+                .flatMap(u -> service.createDirect(new DirectAppointmentRequest(
+                        u.getId(), request.specialty(), request.startsAt(), request.endsAt(),
+                        request.firstName(), request.lastName(), request.email(), request.phone(),
+                        request.coverageType(), request.healthInsurance(), request.healthPlan(), request.affiliateNumber(),
+                        request.subject(), request.message()
+                )));
+    }
+
+    // Professional: actualizar cita propia
+    @PatchMapping(value = "/api/professional/appointments/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Actualizar cita propia (PROFESSIONAL)")
+    public Mono<AppointmentResponse> updateByPro(Authentication auth, @PathVariable Long id, @RequestBody UpdateAppointmentRequest request) {
+        String username = auth.getName();
+        return users.findByUsername(username)
+                .flatMap(u -> repository.findById(id)
+                        .filter(a -> u.getId().equals(a.getProfessionalId()))
+                        .switchIfEmpty(Mono.error(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN)))
+                        .then(service.updateAppointment(id, request))
+                );
+    }
+
+    // Professional: cancelar cita propia
+    @PatchMapping("/api/professional/appointments/{id}/cancel")
+    @Operation(summary = "Cancelar cita propia (PROFESSIONAL)")
+    public Mono<Void> cancelByPro(Authentication auth, @PathVariable Long id) {
+        String username = auth.getName();
+        return users.findByUsername(username)
+                .flatMap(u -> repository.findById(id)
+                        .filter(a -> u.getId().equals(a.getProfessionalId()))
+                        .switchIfEmpty(Mono.error(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN)))
+                        .doOnNext(a -> { a.setStatus(AppointmentStatus.CANCELLED); a.setUpdatedAt(java.time.LocalDateTime.now()); })
+                        .flatMap(repository::save)
+                        .then());
+    }
+
+    // Patient: cancelar cita propia
+    @PatchMapping("/api/patient/appointments/{id}/cancel")
+    @Operation(summary = "Cancelar mi cita (PATIENT)")
+    public Mono<Void> cancelByPatient(Authentication auth, @PathVariable Long id) {
+        String username = auth.getName();
+        return users.findByUsername(username)
+                .flatMap(u -> repository.findById(id)
+                        .filter(a -> u.getId().equals(a.getPatientId()))
+                        .switchIfEmpty(Mono.error(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN)))
+                        .doOnNext(a -> { a.setStatus(AppointmentStatus.CANCELLED); a.setUpdatedAt(java.time.LocalDateTime.now()); })
+                        .flatMap(repository::save)
+                        .then());
     }
     private ResponseEntity<String> csvResponse(java.util.List<MedicalAppointment> list, String filename) {
         String csv = toCsv(list);
