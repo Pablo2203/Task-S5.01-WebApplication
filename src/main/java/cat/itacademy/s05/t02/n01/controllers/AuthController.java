@@ -26,10 +26,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/auth", produces = MediaType.APPLICATION_JSON_VALUE)
+@Slf4j
 public class AuthController {
 
     private final UserRepository users;
@@ -51,6 +53,7 @@ public class AuthController {
                     if (!u.isEnabled() || !passwordEncoder.matches(req.password(), u.getPasswordHash())) {
                         return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas"));
                     }
+                    log.info("Login OK username={} role={}", u.getUsername(), u.getRole());
                     List<String> roles = List.of(u.getRole());
                     String token = jwtService.generateToken(u.getUsername(), roles);
                     Instant expires = Instant.now().plusSeconds(60L * 60L);
@@ -61,6 +64,7 @@ public class AuthController {
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registro de usuario", description = "Crea cuenta de PATIENT habilitada o PROFESSIONAL pendiente de aprobación")
     public Mono<ResponseEntity<java.util.Map<String, Object>>> register(@Valid @RequestBody RegisterRequest req) {
+        log.info("Register attempt username={} email={} role={} ", req.username(), req.email(), req.roleWanted());
         return users.findByUsername(req.username())
                 .flatMap(u -> Mono.<cat.itacademy.s05.t02.n01.model.User>error(new ResponseStatusException(HttpStatus.CONFLICT, "Usuario ya existe")))
                 .switchIfEmpty(users.findByEmail(req.email())
@@ -81,6 +85,7 @@ public class AuthController {
                         String token = jwtService.generateTokenWithPurpose(saved.getEmail(), List.of(), "confirm", 60 * 24);
                         String link = frontendBaseUrl.replaceAll("/$", "") + "/confirmar-email?token=" + token;
                         mailService.send(saved.getEmail(), "Confirmá tu cuenta", "Hola, hacé click para confirmar tu cuenta: " + link);
+                        log.info("Register OK userId={} role={} emailSent=true", saved.getId(), saved.getRole());
                     } catch (Exception ignored) {}
                 })
                 .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(java.util.Map.of("ok", true)));

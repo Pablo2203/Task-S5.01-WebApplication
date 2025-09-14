@@ -16,11 +16,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MedicalAppointmentService {
 
     private static final long DEFAULT_DURATION_MINUTES = 50L;
@@ -31,6 +33,7 @@ public class MedicalAppointmentService {
 
     // 1) Crear solicitud pública (REQUESTED)
     public Mono<AppointmentResponse> createRequest(CreateAppointmentRequestPublic request) {
+        log.info("Creating REQUESTED appointment subject={} coverage={} ", request.subject(), request.coverageType());
         if (request.coverageType() == CoverageType.INSURANCE && (request.healthInsurance() == null || request.healthInsurance().isBlank())) {
             return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar su Obra Social"));
         }
@@ -43,6 +46,7 @@ public class MedicalAppointmentService {
 
     // 2) Agendar una solicitud (pasar a SCHEDULED)
     public Mono<AppointmentResponse> scheduleAppointment(Long id, ScheduleAppointmentRequest dto) {
+        log.info("Scheduling appointment id={} professionalId={} startsAt={}", id, dto.professionalId(), dto.startsAt());
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud no encontrada")))
                 .flatMap(existing -> {
@@ -57,6 +61,7 @@ public class MedicalAppointmentService {
                     return repository.existsByProfessionalIdAndStartsAtLessThanAndEndsAtGreaterThan(dto.professionalId(), endsAt, startsAt)
                             .flatMap(exists -> {
                                 if (exists) {
+                                    log.warn("Overlap detected professionalId={} startsAt={} endsAt={}", dto.professionalId(), startsAt, endsAt);
                                     return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "El profesional ya tiene un turno en ese horario"));
                                 }
 
@@ -73,11 +78,13 @@ public class MedicalAppointmentService {
 
     // 3) Crear cita directa (ADMIN o PROFESSIONAL) → estado SCHEDULED
     public Mono<AppointmentResponse> createDirect(DirectAppointmentRequest dto) {
+        log.info("Creating DIRECT appointment professionalId={} startsAt={} firstName={} lastName={} ", dto.professionalId(), dto.startsAt(), dto.firstName(), dto.lastName());
         LocalDateTime startsAt = dto.startsAt();
         LocalDateTime endsAt = dto.endsAt() != null ? dto.endsAt() : startsAt.plusMinutes(DEFAULT_DURATION_MINUTES);
         return repository.existsByProfessionalIdAndStartsAtLessThanAndEndsAtGreaterThan(dto.professionalId(), endsAt, startsAt)
                 .flatMap(exists -> {
                     if (exists) {
+                        log.warn("Overlap on direct creation professionalId={} startsAt={} endsAt={}", dto.professionalId(), startsAt, endsAt);
                         return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "El profesional ya tiene un turno en ese horario"));
                     }
                     MedicalAppointment a = MedicalAppointment.builder()
@@ -104,12 +111,17 @@ public class MedicalAppointmentService {
                                     .map(u -> { a.setPatientId(u.getId()); return a; })
                                     .switchIfEmpty(Mono.just(a))
                             : Mono.just(a);
-                    return enriched.flatMap(repository::save).map(mapper::toResponse);
+                    return enriched.flatMap(repository::save)
+                            .map(appt -> {
+                                log.info("Appointment created id={} professionalId={} startsAt={}", appt.getId(), appt.getProfessionalId(), appt.getStartsAt());
+                                return mapper.toResponse(appt);
+                            });
                 });
     }
 
     // 4) Actualizar cita (horarios/estado)
     public Mono<AppointmentResponse> updateAppointment(Long id, UpdateAppointmentRequest dto) {
+        log.info("Updating appointment id={} startsAt={} status={} ", id, dto.startsAt(), dto.status());
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita no encontrada")))
                 .flatMap(existing -> {
@@ -122,6 +134,7 @@ public class MedicalAppointmentService {
                     return repository.existsByProfessionalIdAndStartsAtLessThanAndEndsAtGreaterThan(professionalId, endsAt, startsAt)
                             .flatMap(exists -> {
                                 if (exists && !startsAt.equals(existing.getStartsAt())) {
+                                    log.warn("Overlap on update professionalId={} startsAt={} endsAt={}", professionalId, startsAt, endsAt);
                                     return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Solapamiento de turnos"));
                                 }
                                 Mono<MedicalAppointment> emailMono;
@@ -145,7 +158,11 @@ public class MedicalAppointmentService {
                                     ent.setEndsAt(endsAt);
                                     ent.setStatus(dto.status());
                                     ent.setUpdatedAt(LocalDateTime.now());
-                                    return repository.save(ent).map(mapper::toResponse);
+                                    return repository.save(ent)
+                                            .map(appt -> {
+                                                log.info("Appointment updated id={} startsAt={} status={}", appt.getId(), appt.getStartsAt(), appt.getStatus());
+                                                return mapper.toResponse(appt);
+                                            });
                                 });
                             });
                 });
