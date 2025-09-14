@@ -41,11 +41,44 @@ public class MedicalAppointmentController {
     // Public: crear solicitud de turno (REQUESTED)
     @PostMapping(value = "/api/appointments/requests", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Crear solicitud pública de turno")
-    public Mono<ResponseEntity<AppointmentResponse>> createRequest(@RequestBody CreateAppointmentRequestPublic request) {
+    public Mono<ResponseEntity<AppointmentResponse>> createRequest(@RequestBody java.util.Map<String, Object> body) {
+        CreateAppointmentRequestPublic request = coercePublicRequest(body);
         return service.createRequest(request)
                 .map(resp -> ResponseEntity.created(URI.create("/api/admin/appointments/" + resp.id()))
                         .body(resp));
     }
+
+    private CreateAppointmentRequestPublic coercePublicRequest(java.util.Map<String, Object> m) {
+        String firstName = str(m.get("firstName"));
+        String lastName = str(m.get("lastName"));
+        String email = str(m.get("email"));
+        String phone = str(m.get("phone"));
+        String cov = str(m.get("coverageType"));
+        cat.itacademy.s05.t02.n01.enums.CoverageType coverageType = null;
+        if (cov != null) {
+            try { coverageType = cat.itacademy.s05.t02.n01.enums.CoverageType.valueOf(cov.toUpperCase()); } catch (Exception ignored) {}
+        }
+        String healthInsurance = str(m.get("healthInsurance"));
+        String spec = str(m.get("specialty"));
+        cat.itacademy.s05.t02.n01.enums.Specialty specialty = null;
+        if (spec != null) {
+            try { specialty = cat.itacademy.s05.t02.n01.enums.Specialty.valueOf(spec.toUpperCase()); } catch (Exception ignored) {}
+        }
+        String preferredProfessional = str(m.get("preferredProfessional"));
+        String subject = str(m.get("subject"));
+        String message = str(m.get("message"));
+        return new CreateAppointmentRequestPublic(
+                firstName, lastName, email, phone,
+                coverageType,
+                healthInsurance,
+                specialty,
+                preferredProfessional,
+                subject,
+                message
+        );
+    }
+
+    private static String str(Object o) { return o == null ? null : String.valueOf(o); }
 
     // Admin: listar solicitudes en estado REQUESTED
     @GetMapping("/api/admin/appointments/requests")
