@@ -10,6 +10,7 @@ import cat.itacademy.s05.t02.n01.enums.CoverageType;
 import cat.itacademy.s05.t02.n01.mapper.AppointmentMapper;
 import cat.itacademy.s05.t02.n01.model.MedicalAppointment;
 import cat.itacademy.s05.t02.n01.repositories.MedicalAppointmentRepository;
+import cat.itacademy.s05.t02.n01.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class MedicalAppointmentService {
 
     private final MedicalAppointmentRepository repository;
     private final AppointmentMapper mapper;
+    private final UserRepository users;
 
     // 1) Crear solicitud pública (REQUESTED)
     public Mono<AppointmentResponse> createRequest(CreateAppointmentRequestPublic request) {
@@ -97,7 +99,12 @@ public class MedicalAppointmentService {
                             .createdAt(LocalDateTime.now())
                             .updatedAt(LocalDateTime.now())
                             .build();
-                    return repository.save(a).map(mapper::toResponse);
+                    Mono<MedicalAppointment> enriched = (dto.email() != null && !dto.email().isBlank())
+                            ? users.findByEmail(dto.email())
+                                    .map(u -> { a.setPatientId(u.getId()); return a; })
+                                    .switchIfEmpty(Mono.just(a))
+                            : Mono.just(a);
+                    return enriched.flatMap(repository::save).map(mapper::toResponse);
                 });
     }
 
@@ -117,11 +124,29 @@ public class MedicalAppointmentService {
                                 if (exists && !startsAt.equals(existing.getStartsAt())) {
                                     return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Solapamiento de turnos"));
                                 }
-                                existing.setStartsAt(startsAt);
-                                existing.setEndsAt(endsAt);
-                                existing.setStatus(dto.status());
-                                existing.setUpdatedAt(LocalDateTime.now());
-                                return repository.save(existing).map(mapper::toResponse);
+                                Mono<MedicalAppointment> emailMono;
+                                if (dto.email() != null) {
+                                    String newEmail = dto.email();
+                                    emailMono = users.findByEmail(newEmail)
+                                            .map(u -> {
+                                                existing.setEmail(newEmail);
+                                                existing.setPatientId(u.getId());
+                                                return existing;
+                                            })
+                                            .switchIfEmpty(Mono.fromCallable(() -> {
+                                                existing.setEmail(newEmail);
+                                                return existing;
+                                            }));
+                                } else {
+                                    emailMono = Mono.just(existing);
+                                }
+                                return emailMono.flatMap(ent -> {
+                                    ent.setStartsAt(startsAt);
+                                    ent.setEndsAt(endsAt);
+                                    ent.setStatus(dto.status());
+                                    ent.setUpdatedAt(LocalDateTime.now());
+                                    return repository.save(ent).map(mapper::toResponse);
+                                });
                             });
                 });
     }

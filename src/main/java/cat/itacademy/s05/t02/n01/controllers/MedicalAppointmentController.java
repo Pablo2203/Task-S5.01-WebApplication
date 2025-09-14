@@ -160,12 +160,17 @@ public class MedicalAppointmentController {
         LocalDateTime toDt = LocalDateTime.parse(to);
         String username = auth.getName();
         return users.findByUsername(username)
-                .flatMapMany(u -> repository.findByPatientIdAndStatusAndStartsAtBetween(
-                        u.getId(),
-                        AppointmentStatus.SCHEDULED,
-                        fromDt,
-                        toDt
-                ))
+                .flatMapMany(u -> reactor.core.publisher.Flux.merge(
+                                repository.findByPatientIdAndStatusAndStartsAtBetween(
+                                        u.getId(), AppointmentStatus.SCHEDULED, fromDt, toDt
+                                ),
+                                // incluir turnos creados por admin asociados por email
+                                repository.findByEmailAndStatusAndStartsAtBetween(
+                                        u.getEmail(), AppointmentStatus.SCHEDULED, fromDt, toDt
+                                )
+                        )
+                        .distinct(MedicalAppointment::getId)
+                )
                 .map(mapper::toResponse);
     }
 

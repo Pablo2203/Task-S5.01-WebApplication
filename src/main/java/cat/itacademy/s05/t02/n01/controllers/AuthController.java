@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.util.List;
@@ -44,10 +46,10 @@ public class AuthController {
         // Permitir login usando username o email en el mismo campo
         return users.findByUsername(req.username())
                 .switchIfEmpty(users.findByEmail(req.username()))
-                .switchIfEmpty(Mono.error(new RuntimeException("Credenciales inválidas")))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas")))
                 .flatMap(u -> {
                     if (!u.isEnabled() || !passwordEncoder.matches(req.password(), u.getPasswordHash())) {
-                        return Mono.error(new RuntimeException("Credenciales inválidas"));
+                        return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas"));
                     }
                     List<String> roles = List.of(u.getRole());
                     String token = jwtService.generateToken(u.getUsername(), roles);
@@ -58,11 +60,11 @@ public class AuthController {
 
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registro de usuario", description = "Crea cuenta de PATIENT habilitada o PROFESSIONAL pendiente de aprobación")
-    public Mono<Void> register(@Valid @RequestBody RegisterRequest req) {
+    public Mono<ResponseEntity<java.util.Map<String, Object>>> register(@Valid @RequestBody RegisterRequest req) {
         return users.findByUsername(req.username())
-                .flatMap(u -> Mono.<cat.itacademy.s05.t02.n01.model.User>error(new RuntimeException("Usuario ya existe")))
+                .flatMap(u -> Mono.<cat.itacademy.s05.t02.n01.model.User>error(new ResponseStatusException(HttpStatus.CONFLICT, "Usuario ya existe")))
                 .switchIfEmpty(users.findByEmail(req.email())
-                        .flatMap(u -> Mono.<cat.itacademy.s05.t02.n01.model.User>error(new RuntimeException("Email ya existe"))))
+                        .flatMap(u -> Mono.<cat.itacademy.s05.t02.n01.model.User>error(new ResponseStatusException(HttpStatus.CONFLICT, "Email ya existe"))))
                 .switchIfEmpty(Mono.defer(() -> {
                     var role = req.roleWanted().equals("PROFESSIONAL") ? "PROFESSIONAL" : "PATIENT";
                     var enabled = !role.equals("PROFESSIONAL");
@@ -81,7 +83,7 @@ public class AuthController {
                         mailService.send(saved.getEmail(), "Confirmá tu cuenta", "Hola, hacé click para confirmar tu cuenta: " + link);
                     } catch (Exception ignored) {}
                 })
-                .then();
+                .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(java.util.Map.of("ok", true)));
     }
 
     @PostMapping(path = "/forgot-password", consumes = MediaType.APPLICATION_JSON_VALUE)

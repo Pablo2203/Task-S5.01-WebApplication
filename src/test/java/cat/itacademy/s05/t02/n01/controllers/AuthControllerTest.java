@@ -122,7 +122,8 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody().isEmpty();
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.ok").isEqualTo(true);
     }
 }

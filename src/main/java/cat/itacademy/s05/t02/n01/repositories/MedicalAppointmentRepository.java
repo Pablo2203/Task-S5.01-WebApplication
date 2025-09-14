@@ -38,4 +38,12 @@ public interface MedicalAppointmentRepository extends ReactiveCrudRepository<Med
             LocalDateTime to
     );
 
+    // Buscar por email del paciente (para citas creadas por admin sin vincular patientId)
+    Flux<MedicalAppointment> findByEmailAndStatusAndStartsAtBetween(
+            String email,
+            AppointmentStatus status,
+            LocalDateTime from,
+            LocalDateTime to
+    );
+
 }

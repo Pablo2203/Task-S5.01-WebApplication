@@ -2,6 +2,7 @@ package cat.itacademy.s05.t02.n01.services;
 
 import cat.itacademy.s05.t02.n01.dto.ProfessionalProfileRequest;
 import cat.itacademy.s05.t02.n01.dto.ProfessionalProfileResponse;
+import cat.itacademy.s05.t02.n01.enums.Specialty;
 import cat.itacademy.s05.t02.n01.model.ProfessionalProfile;
 import cat.itacademy.s05.t02.n01.repositories.ProfessionalProfileRepository;
 import cat.itacademy.s05.t02.n01.repositories.UserRepository;
@@ -29,7 +30,7 @@ public class ProfessionalProfileService {
                     p.setFirstName(req.firstName());
                     p.setLastName(req.lastName());
                     p.setStudies(req.studies());
-                    p.setSpecialty(req.specialty());
+                    p.setSpecialty(parseSpecialty(req.specialty()));
                     p.setBio(req.bio());
                     p.setPhotoUrl(req.photoUrl());
                     p.setUpdatedAt(LocalDateTime.now());
@@ -44,10 +45,20 @@ public class ProfessionalProfileService {
                 p.getFirstName(),
                 p.getLastName(),
                 p.getStudies(),
-                p.getSpecialty(),
+                p.getSpecialty() != null ? p.getSpecialty().name() : null,
                 p.getBio(),
                 p.getPhotoUrl()
         );
     }
-}
 
+    private Specialty parseSpecialty(String value) {
+        if (value == null) return null;
+        String v = value.trim();
+        if (v.isEmpty()) return null;
+        try {
+            return Specialty.valueOf(v.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+}

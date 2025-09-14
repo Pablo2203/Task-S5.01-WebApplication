@@ -6,6 +6,7 @@ import cat.itacademy.s05.t02.n01.enums.AppointmentStatus;
 import cat.itacademy.s05.t02.n01.mapper.AppointmentMapper;
 import cat.itacademy.s05.t02.n01.model.MedicalAppointment;
 import cat.itacademy.s05.t02.n01.repositories.MedicalAppointmentRepository;
+import cat.itacademy.s05.t02.n01.repositories.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,7 +21,8 @@ class MedicalAppointmentServiceTest {
     void schedule_conflict_when_overlapping() {
         MedicalAppointmentRepository repo = Mockito.mock(MedicalAppointmentRepository.class);
         AppointmentMapper mapper = Mockito.mock(AppointmentMapper.class);
-        MedicalAppointmentService service = new MedicalAppointmentService(repo, mapper);
+        UserRepository users = Mockito.mock(UserRepository.class);
+        MedicalAppointmentService service = new MedicalAppointmentService(repo, mapper, users);
 
         MedicalAppointment existing = MedicalAppointment.builder()
                 .id(10L)
@@ -46,7 +48,8 @@ class MedicalAppointmentServiceTest {
     void schedule_success_when_no_overlap() {
         MedicalAppointmentRepository repo = Mockito.mock(MedicalAppointmentRepository.class);
         AppointmentMapper mapper = Mockito.mock(AppointmentMapper.class);
-        MedicalAppointmentService service = new MedicalAppointmentService(repo, mapper);
+        UserRepository users = Mockito.mock(UserRepository.class);
+        MedicalAppointmentService service = new MedicalAppointmentService(repo, mapper, users);
 
         MedicalAppointment existing = MedicalAppointment.builder()
                 .id(11L)
